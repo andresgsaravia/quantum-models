@@ -54,7 +54,7 @@ int main (void) {
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
   cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
 
-  // Band energy interaction:
+  // band energy interaction
   for (e1 = 1; e1 <= 3; e1++) {
     for (e2 = 1; e2 <= 3; e2++) {
       for (ir = 0; ir <= ir_phonons; ir++) {
@@ -63,6 +63,47 @@ int main (void) {
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = band_energy[e1 - 1] + band_energy[e2 - 1];
 	  h_list.push_back(T(row, col, energy));
+	}
+      }
+    }
+  }
+
+  // on-site Coulomb repulsion
+  for (e1 = 1; e1 <= 3; e1++) {
+    for (ir = 0; ir <= ir_phonons; ir++) {
+      for (ram = 0; ram <= raman_phonons; ram++) {
+	row = state_label(e1, e1, ir, ram, ir_phonons);
+	col = state_label(e1, e1, ir, ram, ir_phonons);
+	h_list.push_back(T(row, col, on_site_repulsion));
+      }
+    }
+  }	  
+
+  // nearest-neighbor hopping
+  for (e1 = 1; e1 <= 3; e1++) {
+    for (e2 = 1; e2 <= 3; e2++) {
+      for (ir = 0; ir <= ir_phonons; ir++) {
+	for (ram = 0; ram <= raman_phonons; ram++) {
+	  if (e1 != 3) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1 + 1, e2, ir, ram, ir_phonons);
+	    h_list.push_back(T(row, col, nn_hopping));
+	  }
+	  if (e1 != 1) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1 - 1, e2, ir, ram, ir_phonons);
+	    h_list.push_back(T(row, col, nn_hopping));
+	  }
+	  if (e2 != 3) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1, e2 + 1, ir, ram, ir_phonons);
+	    h_list.push_back(T(row, col, nn_hopping));
+	  }
+	  if (e2 != 1) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1, e2 - 1, ir, ram, ir_phonons);
+	    h_list.push_back(T(row, col, nn_hopping));
+	  }
 	}
       }
     }
