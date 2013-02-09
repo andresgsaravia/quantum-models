@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #include "Eigen/Sparse"
 
 typedef Eigen::SparseMatrix<double> SpMat;   // column-major sparse matrix of type double
@@ -19,9 +20,10 @@ int main (void) {
   int ir_phonons, raman_phonons, size;
   double band_energy[3];
   double nn_hopping, on_site_repulsion, ir_energy, raman_energy, raman_shift;
+  double e_ir_coupling, e_ram_coupling;
   vector<T> h_list;     // list of non-zero elements of the hamiltonian (as Triplets)
 
-  int e1, e2, ir, ram, row, col;  // just counters
+  int e1, e2, ir, ram, row, col, n;  // just counters
   double energy;  // useful variable to fill in the hamiltonian elements
 
   cout << endl << "This program calculates the eigenvalues for a model hamiltonian" << endl;
@@ -42,8 +44,12 @@ int main (void) {
   cin >> on_site_repulsion;
   cout << "Infrared phonon's energy: ";
   cin >> ir_energy;
+  cout << "Electron - infrared phonons coupling: ";
+  cin >> e_ir_coupling;
   cout << "Raman phonon's energy: ";
   cin >> raman_energy;
+  cout << "Electron - raman phonons coupling: ";
+  cin >> e_ram_coupling;
   cout << "Raman shift: ";
   cin >> raman_shift;
   cout << "Number of infrared phonons: ";
@@ -109,10 +115,85 @@ int main (void) {
     }
   }
 
+  // infrared phonons energy
+  for (e1 = 1; e1 <= 3; e1++) {
+    for (e2 = 1; e2 <= 3; e2++) {
+      for (ir = 0; ir <= ir_phonons; ir++) {
+	for (ram = 0; ram <= raman_phonons; ram++) {
+	  row = state_label(e1, e2, ir, ram, ir_phonons);
+	  col = state_label(e1, e2, ir, ram, ir_phonons);
+	  energy = ir * ir_energy;
+	  h_list.push_back(T(row, col, energy));
+	}
+      }
+    }
+  }
+
+  // raman phonons energy
+  for (e1 = 1; e1 <= 3; e1++) {
+    for (e2 = 1; e2 <= 3; e2++) {
+      for (ir = 0; ir <= ir_phonons; ir++) {
+	for (ram = 0; ram <= raman_phonons; ram++) {
+	  row = state_label(e1, e2, ir, ram, ir_phonons);
+	  col = state_label(e1, e2, ir, ram, ir_phonons);
+	  energy = ram * raman_energy;
+	  h_list.push_back(T(row, col, energy));
+	}
+      }
+    }
+  }
+
+
+  // electron - infrared phonons interaction
+  for (e1 = 1; e1 <= 3; e1++) {
+    for (e2 = 1; e2 <= 3; e2++) {
+      for (ir = 0; ir <= ir_phonons; ir++) {
+	for (ram = 0; ram <= raman_phonons; ram++) {
+	  n = e1 + e2 - 4;
+	  if (ir != ir_phonons) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1, e2, ir + 1, ram, ir_phonons);
+	    energy = n * e_ir_coupling * sqrt(ir + 1);
+	    h_list.push_back(T(row, col, energy));
+	  }
+	  if (ir != 0) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1, e2, ir - 1, ram, ir_phonons);
+	    energy = n * e_ir_coupling * sqrt(ir);
+	    h_list.push_back(T(row, col, energy));
+	  }
+	}
+      }
+    }
+  }
+
+  // electron - Raman phonons interaction
+  for (e1 = 1; e1 <= 3; e1++) {
+    for (e2 = 1; e2 <= 3; e2++) {
+      for (ir = 0; ir <= ir_phonons; ir++) {
+	for (ram = 0; ram <= raman_phonons; ram++) {
+	  n = abs(e1 - 2) + abs(e2 - 2) - raman_shift;
+	  if (ram != ir_phonons) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1, e2, ir, ram + 1, ir_phonons);
+	    energy = n * e_ram_coupling * sqrt(ram + 1);
+	    h_list.push_back(T(row, col, energy));
+	  }
+	  if (ram != 0) {
+	    row = state_label(e1, e2, ir, ram, ir_phonons);
+	    col = state_label(e1, e2, ir, ram - 1, ir_phonons);
+	    energy = n * e_ram_coupling * sqrt(ram);
+	    h_list.push_back(T(row, col, energy));
+	  }
+	}
+      }
+    }
+  }
+
+
   SpMat hamiltonian(size, size);
   hamiltonian.setFromTriplets(h_list.begin(), h_list.end());
-  cout << "The matrix is:" << endl;
-  cout << hamiltonian << endl;
+  cout << "The matrix has a size of:" << hamiltonian.size() << endl;
 
   return 0;
 }
