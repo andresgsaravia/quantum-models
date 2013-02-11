@@ -60,36 +60,29 @@ int main (void) {
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
   cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
 
-  // band energy interaction
+  // building the hamiltonian
+  // I make a list (h_list) with triplets (row, col, value) of all
+  // the non-zero elements. If there are (row, col) pairs repeated
+  // their values will be summed.
   for (e1 = 1; e1 <= 3; e1++) {
     for (e2 = 1; e2 <= 3; e2++) {
       for (ir = 0; ir <= ir_phonons; ir++) {
 	for (ram = 0; ram <= raman_phonons; ram++) {
+
+	  // band energies
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = band_energy[e1 - 1] + band_energy[e2 - 1];
 	  h_list.push_back(T(row, col, energy));
-	}
-      }
-    }
-  }
 
-  // on-site Coulomb repulsion
-  for (e1 = 1; e1 <= 3; e1++) {
-    for (ir = 0; ir <= ir_phonons; ir++) {
-      for (ram = 0; ram <= raman_phonons; ram++) {
-	row = state_label(e1, e1, ir, ram, ir_phonons);
-	col = state_label(e1, e1, ir, ram, ir_phonons);
-	h_list.push_back(T(row, col, on_site_repulsion));
-      }
-    }
-  }	  
+	  // on-site Coulomb repulsion
+	  if (e1 == e2) {
+	    row = state_label(e1, e1, ir, ram, ir_phonons);
+	    col = state_label(e1, e1, ir, ram, ir_phonons);
+	    h_list.push_back(T(row, col, on_site_repulsion));
+	  }
 
-  // nearest-neighbor hopping
-  for (e1 = 1; e1 <= 3; e1++) {
-    for (e2 = 1; e2 <= 3; e2++) {
-      for (ir = 0; ir <= ir_phonons; ir++) {
-	for (ram = 0; ram <= raman_phonons; ram++) {
+	  // nearest-neighbor hopping
 	  if (e1 != 3) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1 + 1, e2, ir, ram, ir_phonons);
@@ -110,45 +103,20 @@ int main (void) {
 	    col = state_label(e1, e2 - 1, ir, ram, ir_phonons);
 	    h_list.push_back(T(row, col, nn_hopping));
 	  }
-	}
-      }
-    }
-  }
-
-  // infrared phonons energy
-  for (e1 = 1; e1 <= 3; e1++) {
-    for (e2 = 1; e2 <= 3; e2++) {
-      for (ir = 0; ir <= ir_phonons; ir++) {
-	for (ram = 0; ram <= raman_phonons; ram++) {
+	  
+	  // infrared phonons energy
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = ir * ir_energy;
 	  h_list.push_back(T(row, col, energy));
-	}
-      }
-    }
-  }
 
-  // raman phonons energy
-  for (e1 = 1; e1 <= 3; e1++) {
-    for (e2 = 1; e2 <= 3; e2++) {
-      for (ir = 0; ir <= ir_phonons; ir++) {
-	for (ram = 0; ram <= raman_phonons; ram++) {
+	  // raman phonons energy
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = ram * raman_energy;
 	  h_list.push_back(T(row, col, energy));
-	}
-      }
-    }
-  }
 
-
-  // electron - infrared phonons interaction
-  for (e1 = 1; e1 <= 3; e1++) {
-    for (e2 = 1; e2 <= 3; e2++) {
-      for (ir = 0; ir <= ir_phonons; ir++) {
-	for (ram = 0; ram <= raman_phonons; ram++) {
+	  // electron - infrared phonons interaction
 	  n = e1 + e2 - 4;
 	  if (ir != ir_phonons) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
@@ -162,16 +130,8 @@ int main (void) {
 	    energy = n * e_ir_coupling * sqrt(ir);
 	    h_list.push_back(T(row, col, energy));
 	  }
-	}
-      }
-    }
-  }
-
-  // electron - Raman phonons interaction
-  for (e1 = 1; e1 <= 3; e1++) {
-    for (e2 = 1; e2 <= 3; e2++) {
-      for (ir = 0; ir <= ir_phonons; ir++) {
-	for (ram = 0; ram <= raman_phonons; ram++) {
+	  
+	  // electron - Raman phonons interaction
 	  n = abs(e1 - 2) + abs(e2 - 2) - raman_shift;
 	  if (ram != ir_phonons) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
@@ -189,7 +149,6 @@ int main (void) {
       }
     }
   }
-
 
   SpMat hamiltonian(size, size);
   hamiltonian.setFromTriplets(h_list.begin(), h_list.end());
