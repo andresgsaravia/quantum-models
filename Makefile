@@ -1,3 +1,6 @@
+
+CPPFLAGS=-I ./
+
 all: main
 
 clean:

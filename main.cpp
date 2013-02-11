@@ -1,11 +1,10 @@
 #include <iostream>
 #include <cmath>
-#include "Eigen/Sparse"
+#include <Eigen/Dense>
 
-typedef Eigen::SparseMatrix<double> SpMat;   // column-major sparse matrix of type double
-typedef Eigen::Triplet<double> T;            // a triplet specifies a non-zero element of a sparse matrix
 
 using namespace std;
+using namespace Eigen;
 
 // Assing a unique label according to the position of electron 1 (e1), electron 2 (e2),
 // the number if infrared and Raman phonons (ir and ram) and the total number of infrared
@@ -21,7 +20,6 @@ int main (void) {
   double band_energy[3];
   double nn_hopping, on_site_repulsion, ir_energy, raman_energy, raman_shift;
   double e_ir_coupling, e_ram_coupling;
-  vector<T> h_list;     // list of non-zero elements of the hamiltonian (as Triplets)
 
   int e1, e2, ir, ram, row, col, n;  // just counters
   double energy;  // useful variable to fill in the hamiltonian elements
@@ -60,6 +58,16 @@ int main (void) {
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
   cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
 
+  MatrixXf h(size,size);
+
+  // initializing the hamiltonian at zeros
+  for (row = 0; row < size; row++) {
+    for (col = 0; col < size; col++) {
+      h(row, col) = 0;
+    }
+  }
+    
+
   // building the hamiltonian
   // I make a list (h_list) with triplets (row, col, value) of all
   // the non-zero elements. If there are (row, col) pairs repeated
@@ -73,48 +81,48 @@ int main (void) {
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = band_energy[e1 - 1] + band_energy[e2 - 1];
-	  h_list.push_back(T(row, col, energy));
+	  h(row,col) += energy;
 
 	  // on-site Coulomb repulsion
 	  if (e1 == e2) {
 	    row = state_label(e1, e1, ir, ram, ir_phonons);
 	    col = state_label(e1, e1, ir, ram, ir_phonons);
-	    h_list.push_back(T(row, col, on_site_repulsion));
+	    h(row, col) += on_site_repulsion;
 	  }
 
 	  // nearest-neighbor hopping
 	  if (e1 != 3) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1 + 1, e2, ir, ram, ir_phonons);
-	    h_list.push_back(T(row, col, nn_hopping));
+	    h(row, col) += nn_hopping;
 	  }
 	  if (e1 != 1) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1 - 1, e2, ir, ram, ir_phonons);
-	    h_list.push_back(T(row, col, nn_hopping));
+	    h(row, col) += nn_hopping;
 	  }
 	  if (e2 != 3) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2 + 1, ir, ram, ir_phonons);
-	    h_list.push_back(T(row, col, nn_hopping));
+	    h(row, col) += nn_hopping;
 	  }
 	  if (e2 != 1) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2 - 1, ir, ram, ir_phonons);
-	    h_list.push_back(T(row, col, nn_hopping));
+	    h(row, col) += nn_hopping;
 	  }
 	  
 	  // infrared phonons energy
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = ir * ir_energy;
-	  h_list.push_back(T(row, col, energy));
+	  h(row, col) += energy;
 
 	  // raman phonons energy
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = ram * raman_energy;
-	  h_list.push_back(T(row, col, energy));
+	  h(row, col) += energy;
 
 	  // electron - infrared phonons interaction
 	  n = e1 + e2 - 4;
@@ -122,13 +130,13 @@ int main (void) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir + 1, ram, ir_phonons);
 	    energy = n * e_ir_coupling * sqrt(ir + 1);
-	    h_list.push_back(T(row, col, energy));
+	    h(row, col) += energy;
 	  }
 	  if (ir != 0) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir - 1, ram, ir_phonons);
 	    energy = n * e_ir_coupling * sqrt(ir);
-	    h_list.push_back(T(row, col, energy));
+	    h(row, col) += energy;
 	  }
 	  
 	  // electron - Raman phonons interaction
@@ -137,22 +145,29 @@ int main (void) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir, ram + 1, ir_phonons);
 	    energy = n * e_ram_coupling * sqrt(ram + 1);
-	    h_list.push_back(T(row, col, energy));
+	    h(row, col) += energy;
 	  }
 	  if (ram != 0) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir, ram - 1, ir_phonons);
 	    energy = n * e_ram_coupling * sqrt(ram);
-	    h_list.push_back(T(row, col, energy));
+	    h(row, col) += energy;
 	  }
 	}
       }
     }
   }
 
-  SpMat hamiltonian(size, size);
-  hamiltonian.setFromTriplets(h_list.begin(), h_list.end());
-  cout << "The matrix has a size of:" << hamiltonian.size() << endl;
+  SelfAdjointEigenSolver<MatrixXf> eigensolver(h);
+  VectorXf eigenvalues = eigensolver.eigenvalues();
 
+  int how_many;
+  cout << "How many eigenvalues should I print?" << endl;
+  cin >> how_many;
+
+  
+  for (n = 0; n < how_many; n++) {
+    cout << eigenvalues(n) << endl;
+  }
   return 0;
 }
