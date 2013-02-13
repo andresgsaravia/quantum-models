@@ -1,8 +1,8 @@
 
 CPPFLAGS=-I ./
 
-all: main
+all: eig
 
 clean:
-	rm -f main
+	rm -f eig
 	rm -f *.txt
