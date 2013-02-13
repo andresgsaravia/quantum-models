@@ -1,10 +1,17 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <Eigen/Dense>
 
 
 using namespace std;
 using namespace Eigen;
+
+typedef SelfAdjointEigenSolver<MatrixXf> MyEigenSolver;
+
+void save_parameters(double*, double, double, double, double, double, double, double, int, int);
+void save_eigenvalues(MyEigenSolver);
+void save_eigenvectors(MyEigenSolver);
 
 // Assing a unique label according to the position of electron 1 (e1), electron 2 (e2),
 // the number if infrared and Raman phonons (ir and ram) and the total number of infrared
@@ -58,7 +65,7 @@ int main (void) {
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
   cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
 
-  MatrixXf h(size,size);
+  MatrixXf h(size,size);  // Perhaps I should use MatrixXd to use double precision...
 
   // initializing the hamiltonian at zeros
   for (row = 0; row < size; row++) {
@@ -66,7 +73,7 @@ int main (void) {
       h(row, col) = 0;
     }
   }
-    
+
 
   // building the hamiltonian
   // I make a list (h_list) with triplets (row, col, value) of all
@@ -158,16 +165,77 @@ int main (void) {
     }
   }
 
-  SelfAdjointEigenSolver<MatrixXf> eigensolver(h);
-  VectorXf eigenvalues = eigensolver.eigenvalues();
+  cout << "I will try to calculate the eigenvalues and eigenvectors now. This could take some time... ";
+  MyEigenSolver eigensolver(h);
+  cout << "Done." << endl;
 
-  int how_many;
-  cout << "How many eigenvalues should I print?" << endl;
-  cin >> how_many;
+  cout << "Saving the parameters used for this calculation at \"parameters.txt\"... ";
+  save_parameters(band_energy, nn_hopping, on_site_repulsion, ir_energy, e_ir_coupling, raman_energy, e_ram_coupling, raman_shift, ir_phonons, raman_phonons);
+  cout << "Done." << endl;
 
-  
-  for (n = 0; n < how_many; n++) {
-    cout << eigenvalues(n) << endl;
-  }
+  cout << "Saving the eigenvalues at \"eigenvalues.txt\"... ";
+  save_eigenvalues(eigensolver);
+  cout << "Done." << endl;
+
+  cout << "Saving the eigenvectors at \"eigenvectors.txt\"... ";
+  save_eigenvectors(eigensolver);
+  cout << "Done." << endl;
+
   return 0;
+}
+
+
+void save_parameters(double *band_energy, double nn_hopping, double on_site_repulsion,
+		     double ir_energy, double e_ir_coupling, double raman_energy, 
+		     double e_ram_coupling, double raman_shift, int ir_phonons, int raman_phonons) {
+  ofstream paramfile;
+  paramfile.open("parameters.txt", ios::out);
+  if (paramfile.is_open()) {
+    paramfile << band_energy[0] << ", Band energy for site 1" << endl;
+    paramfile << band_energy[1] << ", Band energy for site 2" << endl;
+    paramfile << band_energy[2] << ", Band energy for site 3" << endl;
+    paramfile << nn_hopping << ", Nearest neighbor hopping" << endl;
+    paramfile << on_site_repulsion << ", On site Coulomb repulsion" << endl;
+    paramfile << ir_energy << ", Infrared phonon's energy" << endl;
+    paramfile << e_ir_coupling << ", Electron - infrared phonons coupling" << endl;
+    paramfile << raman_energy << ", Raman phonon's energy" << endl;
+    paramfile << e_ir_coupling << ", Electron - raman phonons coupling" << endl;
+    paramfile << raman_shift << ", Raman shift" << endl;
+    paramfile << ir_phonons << ", Number of infrared phonons" << endl;
+    paramfile << raman_phonons << ", Number of raman phonons" << endl;
+    paramfile.close();
+  }
+  else {
+    cout << "Unable to create file. " << endl;
+  }
+  return;
+}
+
+
+
+void save_eigenvalues(MyEigenSolver eigensolver) {
+    ofstream eigvfile;
+    eigvfile.open("eigenvalues.txt", ios::out);
+    if (eigvfile.is_open()) {
+      eigvfile << eigensolver.eigenvalues();
+      eigvfile.close();
+    }
+    else {
+      cout << "Unable to create file" << endl;
+    }
+    return;
+}
+
+
+void save_eigenvectors(MyEigenSolver eigensolver) {
+    ofstream eigvfile;
+    eigvfile.open("eigenvectors.txt", ios::out);
+    if (eigvfile.is_open()) {
+      eigvfile << eigensolver.eigenvectors();
+      eigvfile.close();
+    }
+    else {
+      cout << "Unable to create file" << endl;
+    }
+    return;
 }
