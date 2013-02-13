@@ -141,7 +141,7 @@ int main (void) {
 	  
 	  // electron - Raman phonons interaction
 	  n = abs(e1 - 2) + abs(e2 - 2) - raman_shift;
-	  if (ram != ir_phonons) {
+	  if (ram != raman_phonons) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir, ram + 1, ir_phonons);
 	    energy = n * e_ram_coupling * sqrt(ram + 1);
