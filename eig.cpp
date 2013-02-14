@@ -35,7 +35,7 @@ int main (int argc, char *argv[]) {
 
   ifstream inputfile;
   string line;
-  inputfile.open("parameters.txt");
+  inputfile.open("parameters.inp");
   if (inputfile.is_open()) {
     // TODO: Assert that the values make sense
     getline(inputfile, line, ',');
@@ -87,9 +87,10 @@ int main (int argc, char *argv[]) {
     getline(inputfile, line);
   }
   else {
-    cout << "Input file not found. I will create a template for you. " << endl;
+    cout << "Input file \"parameters.inp\" not found. I will create a template for you. " << endl;
     double temp[3] = {0, 0, 0};
     save_parameters(temp, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0);
+    return 0;
   }
 
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
@@ -216,7 +217,7 @@ void save_parameters(double *band_energy, double nn_hopping, double on_site_repu
 		     double ir_energy, double e_ir_coupling, double raman_energy, 
 		     double e_ram_coupling, double raman_shift, int ir_phonons, int raman_phonons) {
   ofstream paramfile;
-  paramfile.open("parameters.txt", ios::out);
+  paramfile.open("parameters.inp", ios::out);
   if (paramfile.is_open()) {
     paramfile << band_energy[0] << ", Band energy for site 1" << endl;
     paramfile << band_energy[1] << ", Band energy for site 2" << endl;

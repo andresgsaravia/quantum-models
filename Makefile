@@ -5,4 +5,4 @@ all: eig
 
 clean:
 	rm -f eig
-	rm -f *.txt
+	rm -rf calculations
