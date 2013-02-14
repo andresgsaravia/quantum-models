@@ -32,11 +32,9 @@ ERAM=`echo "scale=8; $ERAM/1.0" | bc`
 
 printf "Raman shift: " 
 read RAMSH
-RAMSH=`echo "scale=8; $RAMSH/1.0" | bc`
 
 printf "Number of infrared phonons: "
 read NIR
-NIR=`echo "scale=8; $NIR/1.0" | bc`
 
 printf "Number of raman phonons: "
 read NRAM
