@@ -1,51 +1,60 @@
 #!/bin/bash
 
-printf "\nThis script will run a set of calculations using the \"eig\" program with a variable parameter.
-For now I've just implemented variable electron-infrared phonons coupling.\n\n"
+printf "\nThis script will just populate a directory named \"calculations\" with \n"
+printf "input parameters suitable for a calculations with \"eig\".\n" 
+printf "For now I've just implemented variable electron-infrared phonons coupling.\n\n"
 
 printf "Please provide the following parameters for the simulations:\n\n"
 
 printf "Band energy: "
 read BAND
+BAND=`echo "scale=8; $BAND" | bc`
 
 printf "Nearest neighbor hopping: "
 read NNH
+BAND=`echo "scale=8; $NNH" | bc`
 
 printf "On site Coulomb repulsion: "
 read ONSITE
+BAND=`echo "scale=8; $ONSITE" | bc`
 
 printf "Infrared phonon's energy: "
 read IRE
+BAND=`echo "scale=8; $IRE" | bc`
 
 printf "Raman phonon's energy: "
 read RAME
+BAND=`echo "scale=8; $RAME" | bc`
 
 printf "Electron - raman phonons coupling: "
 read ERAM
+BAND=`echo "scale=8; $ERAM" | bc`
 
 printf "Raman shift: " 
 read RAMSH
+BAND=`echo "scale=8; $RAMSH" | bc`
 
 printf "Number of infrared phonons: "
 read NIR
+BAND=`echo "scale=8; $NIR" | bc`
 
 printf "Number of raman phonons: "
 read NRAM
+BAND=`echo "scale=8; $NRAM" | bc`
 
 printf "Lowest electron - infrared phonons coupling value: "
 read LOWEIR
-EIR=`echo "scale=5; $LOWEIR/1.0" | bc`
+BAND=`echo "scale=8; $LOWEIR" | bc`
+EIR=`echo "scale=8; $LOWEIR/1.0" | bc`
 
 printf "Greatest electron - infrared phonons coupling value: "
 read GREATEIR
+BAND=`echo "scale=8; $GREATEIR" | bc`
 
 printf "How many points should I calculate between %s and %s? " "$LOWEIR" "$GREATEIR"
 read POINTS
 
-#printf "How many simultaneous calculations should I run? "
-#read SIMCAL
-
-STEP=`echo "scale=5; ($GREATEIR-$LOWEIR)/$POINTS" | bc`
+STEP=`echo "scale=8; ($GREATEIR-$LOWEIR)/$POINTS" | bc`
 COUNT=0
 
 if [ ! -d "calculations" ]; then
@@ -78,12 +87,7 @@ do
 	printf "%s, Raman shift\n" "$RAMSH" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, Number of infrared phonons\n" "$NIR" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, Number of raman phonons\n" "$NRAM" >> "calculations/$DIRNAME/parameters.inp"
-	printf "I will call the \"eig\" routine to make the calculation.\n"
-	cd calculations/$DIRNAME
-	../../eig
-	cd ../../
-	printf "\n"
     fi
-    EIR=`echo "scale=5; $EIR+$STEP" | bc`
+    EIR=`echo "scale=8; $EIR+$STEP" | bc`
     ((COUNT += 1))
 done
