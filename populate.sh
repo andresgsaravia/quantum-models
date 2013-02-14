@@ -8,48 +8,48 @@ printf "Please provide the following parameters for the simulations:\n\n"
 
 printf "Band energy: "
 read BAND
-BAND=`echo "scale=8; $BAND" | bc`
+BAND=`echo "scale=8; $BAND/1.0" | bc`
 
 printf "Nearest neighbor hopping: "
 read NNH
-BAND=`echo "scale=8; $NNH" | bc`
+NNH=`echo "scale=8; $NNH/1.0" | bc`
 
 printf "On site Coulomb repulsion: "
 read ONSITE
-BAND=`echo "scale=8; $ONSITE" | bc`
+ONSITE=`echo "scale=8; $ONSITE/1.0" | bc`
 
 printf "Infrared phonon's energy: "
 read IRE
-BAND=`echo "scale=8; $IRE" | bc`
+IRE=`echo "scale=8; $IRE/1.0" | bc`
 
 printf "Raman phonon's energy: "
 read RAME
-BAND=`echo "scale=8; $RAME" | bc`
+RAME=`echo "scale=8; $RAME/1.0" | bc`
 
 printf "Electron - raman phonons coupling: "
 read ERAM
-BAND=`echo "scale=8; $ERAM" | bc`
+ERAM=`echo "scale=8; $ERAM/1.0" | bc`
 
 printf "Raman shift: " 
 read RAMSH
-BAND=`echo "scale=8; $RAMSH" | bc`
+RAMSH=`echo "scale=8; $RAMSH/1.0" | bc`
 
 printf "Number of infrared phonons: "
 read NIR
-BAND=`echo "scale=8; $NIR" | bc`
+NIR=`echo "scale=8; $NIR/1.0" | bc`
 
 printf "Number of raman phonons: "
 read NRAM
-BAND=`echo "scale=8; $NRAM" | bc`
+NRAM=`echo "scale=8; $NRAM/1.0" | bc`
 
 printf "Lowest electron - infrared phonons coupling value: "
 read LOWEIR
-BAND=`echo "scale=8; $LOWEIR" | bc`
-EIR=`echo "scale=8; $LOWEIR/1.0" | bc`
+LOWEIR=`echo "scale=8; $LOWEIR/1.0" | bc`
+EIR=`echo "scale=8; $LOWEIR" | bc`
 
 printf "Greatest electron - infrared phonons coupling value: "
 read GREATEIR
-BAND=`echo "scale=8; $GREATEIR" | bc`
+GREATEIR=`echo "scale=8; $GREATEIR/1.0" | bc`
 
 printf "How many points should I calculate between %s and %s? " "$LOWEIR" "$GREATEIR"
 read POINTS
@@ -67,7 +67,7 @@ fi
 # Create all the directories
 while (( COUNT <= POINTS ))
 do
-    DIRNAME="$BAND-$NNH-$ONSITE-$IRE-$EIR-$RAME-$ERAM-$RAMSH-$NIR-$NRAM"
+    DIRNAME="c$BAND-$NNH-$ONSITE-$IRE-$EIR-$RAME-$ERAM-$RAMSH-$NIR-$NRAM"
     if [ -d "calculations/$DIRNAME" ]; then
 	printf "It seems that there's already a calculation with the parameters you provided and a coupling of %s. " "$EIR"
 	printf "I will skip this calculation.\n"
@@ -76,7 +76,7 @@ do
 	`mkdir calculations/$DIRNAME`
 	printf "Saving \"parameters.inp\" into %s\n" "$DIRNAME"
 	printf "%s, Band energy for site 1\n" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
-	printf "-%s, Band energy for site 2\n" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
+	printf "%s%s, Band energy for site 2\n" "_" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, Band energy for site 3\n" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, Nearest neighbor hopping\n" "$NNH" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, On site Coulomb repulsion\n" "$ONSITE" >> "calculations/$DIRNAME/parameters.inp"
@@ -91,3 +91,5 @@ do
     EIR=`echo "scale=8; $EIR+$STEP" | bc`
     ((COUNT += 1))
 done
+
+printf "Done"
