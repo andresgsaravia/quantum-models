@@ -11,6 +11,7 @@ using namespace Eigen;
 
 typedef SelfAdjointEigenSolver<MatrixXf> MyEigenSolver;
 
+void save_hamiltonian(MatrixXf);
 void save_parameters(double*, double, double, double, double, double, double, double, int, int);
 void save_eigenvalues(MyEigenSolver);
 void save_eigenvectors(MyEigenSolver);
@@ -85,6 +86,8 @@ int main (int argc, char *argv[]) {
     getline(inputfile, line, ',');
     raman_phonons = atoi(line.c_str());
     getline(inputfile, line);
+
+    inputfile.close();
   }
   else {
     cout << "Input file \"parameters.inp\" not found. I will create a template for you. " << endl;
@@ -96,14 +99,7 @@ int main (int argc, char *argv[]) {
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
   cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
 
-  MatrixXf h(size,size);  // Perhaps I should use MatrixXd to use double precision...
-
-  // initializing the hamiltonian at zeros
-  for (row = 0; row < size; row++) {
-    for (col = 0; col < size; col++) {
-      h(row, col) = 0;
-    }
-  }
+  MatrixXf h = MatrixXf::Zero(size, size);  // Perhaps I should use MatrixXd to use double precision...
 
 
   // building the hamiltonian
@@ -201,6 +197,10 @@ int main (int argc, char *argv[]) {
   MyEigenSolver eigensolver(h);
   cout << "Done." << endl;
 
+  cout << "Saving the hamiltonian matrix at \"hamiltonian.txt\"... ";
+  save_hamiltonian(h);
+  cout << "Done." << endl;
+
   cout << "Saving the eigenvalues at \"eigenvalues.txt\"... ";
   save_eigenvalues(eigensolver);
   cout << "Done." << endl;
@@ -261,6 +261,19 @@ void save_eigenvectors(MyEigenSolver eigensolver) {
     if (eigvfile.is_open()) {
       eigvfile << eigensolver.eigenvectors();
       eigvfile.close();
+    }
+    else {
+      cout << "Unable to create file" << endl;
+    }
+    return;
+}
+
+void save_hamiltonian(MatrixXf hamiltonian) {
+    ofstream hamfile;
+    hamfile.open("hamiltonian.txt", ios::out);
+    if (hamfile.is_open()) {
+      hamfile << hamiltonian;
+      hamfile.close();
     }
     else {
       cout << "Unable to create file" << endl;
