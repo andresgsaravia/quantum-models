@@ -90,4 +90,4 @@ do
     ((COUNT += 1))
 done
 
-printf "Done"
+printf "Done\n"
