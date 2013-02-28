@@ -192,13 +192,13 @@ int main (int argc, char *argv[]) {
     }
   }
 
+  cout << "Saving the hamiltonian matrix at \"hamiltonian.txt\"... ";
+  save_hamiltonian(h);
+  cout << "Done." << endl;
+
   cout << "I will try to calculate the eigenvalues and eigenvectors now." << endl;
   cout << "This could take some time... ";
   MyEigenSolver eigensolver(h);
-  cout << "Done." << endl;
-
-  cout << "Saving the hamiltonian matrix at \"hamiltonian.txt\"... ";
-  save_hamiltonian(h);
   cout << "Done." << endl;
 
   cout << "Saving the eigenvalues at \"eigenvalues.txt\"... ";
