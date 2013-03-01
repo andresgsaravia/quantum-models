@@ -1,7 +1,7 @@
 
 CPPFLAGS=-I ./
 
-all: 3-sites-linear/hamiltonian 3-sites-linear/mean-phonons
+all: eig 3-sites-linear/hamiltonian 3-sites-linear/mean-phonons 
 
 clean:
 	rm -f eig
