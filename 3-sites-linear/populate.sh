@@ -74,7 +74,7 @@ do
 	`mkdir calculations/$DIRNAME`
 	printf "Saving \"parameters.inp\" into %s\n" "$DIRNAME"
 	printf "%s, Band energy for site 1\n" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
-	printf "%s%s, Band energy for site 2\n" "_" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
+	printf "%s%s, Band energy for site 2\n" "-" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, Band energy for site 3\n" "$BAND" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, Nearest neighbor hopping\n" "$NNH" >> "calculations/$DIRNAME/parameters.inp"
 	printf "%s, On site Coulomb repulsion\n" "$ONSITE" >> "calculations/$DIRNAME/parameters.inp"
