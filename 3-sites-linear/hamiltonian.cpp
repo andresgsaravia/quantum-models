@@ -247,6 +247,7 @@ void save_hamiltonian(MatrixXf hamiltonian) {
     hamfile.open("hamiltonian.txt", ios::out);
     if (hamfile.is_open()) {
       hamfile << hamiltonian;
+      hamfile << endl;
       hamfile.close();
     }
     else {

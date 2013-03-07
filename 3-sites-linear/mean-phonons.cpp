@@ -159,6 +159,7 @@ void save_vector(string filename, VectorXf vec) {
   outfile.open(filename.c_str(), ios::out);
   if(outfile.is_open()) {
     outfile << vec;
+    outfile << endl;
     outfile.close();
   }
   else {

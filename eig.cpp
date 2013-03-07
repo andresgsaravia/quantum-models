@@ -73,6 +73,7 @@ void save_eigenvalues(MyEigenSolver eigensolver) {
     eigvfile.open("eigenvalues.txt", ios::out);
     if (eigvfile.is_open()) {
       eigvfile << eigensolver.eigenvalues();
+      eigvfile << endl;
       eigvfile.close();
     }
     else {
@@ -87,6 +88,7 @@ void save_eigenvectors(MyEigenSolver eigensolver) {
     eigvfile.open("eigenvectors.txt", ios::out);
     if (eigvfile.is_open()) {
       eigvfile << eigensolver.eigenvectors();
+      eigvfile << endl;
       eigvfile.close();
     }
     else {
