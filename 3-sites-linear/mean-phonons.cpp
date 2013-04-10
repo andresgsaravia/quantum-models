@@ -9,7 +9,7 @@
 using namespace std;
 using namespace Eigen;
 
-void save_vector(string, VectorXf);
+void save_vector(string, VectorXd);
 
 int state_label (int e1, int e2, int ir, int ram, int n_ir)
 {
@@ -88,7 +88,7 @@ int main (int argc, char *argv[]) {
   }
 
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
-  MatrixXf eigenvectors(size,size);
+  MatrixXd eigenvectors(size,size);
 
   // Read the eigenvectors
   inputfile.open("eigenvectors.txt");
@@ -102,16 +102,17 @@ int main (int argc, char *argv[]) {
 	eigenvectors(row, col) = f;
       }
     }
+    cout << "Eigenvector's matrix has size: " << eigenvectors.rows() << "x" << eigenvectors.cols() << endl;
   }
   else {
     cout << "eigenvectors.txt not found. " << endl;
     return 1;
   }
 
-  VectorXf mean_ir = VectorXf::Zero(size);
-  VectorXf mean_ram = VectorXf::Zero(size);
-  VectorXf stdd_ir = VectorXf::Zero(size);
-  VectorXf stdd_ram = VectorXf::Zero(size);
+  VectorXd mean_ir = VectorXd::Zero(size);
+  VectorXd mean_ram = VectorXd::Zero(size);
+  VectorXd stdd_ir = VectorXd::Zero(size);
+  VectorXd stdd_ram = VectorXd::Zero(size);
 
   cout << "Calculating mean phonons and standard deviations. ";
   // Calculate the mean phonons
@@ -154,7 +155,7 @@ int main (int argc, char *argv[]) {
   return 0;
 }
 
-void save_vector(string filename, VectorXf vec) {
+void save_vector(string filename, VectorXd vec) {
   ofstream outfile;
   outfile.open(filename.c_str(), ios::out);
   if(outfile.is_open()) {

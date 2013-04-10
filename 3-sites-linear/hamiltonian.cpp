@@ -32,7 +32,7 @@
 using namespace std;
 using namespace Eigen;
 
-void save_hamiltonian(MatrixXf);
+void save_hamiltonian(MatrixXd);
 void save_parameters(double*, double, double, double, double, double, double, double, int, int);
 
 // Assing a unique label according to the position of electron 1 (e1), electron 2 (e2),
@@ -118,7 +118,7 @@ int main (int argc, char *argv[]) {
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
   cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
 
-  MatrixXf h = MatrixXf::Zero(size, size);  // Perhaps I should use MatrixXd to use double precision...
+  MatrixXd h = MatrixXd::Zero(size, size);
 
 
   // building the hamiltonian
@@ -242,7 +242,7 @@ void save_parameters(double *band_energy, double nn_hopping, double on_site_repu
   return;
 }
 
-void save_hamiltonian(MatrixXf hamiltonian) {
+void save_hamiltonian(MatrixXd hamiltonian) {
     ofstream hamfile;
     hamfile.open("hamiltonian.txt", ios::out);
     if (hamfile.is_open()) {

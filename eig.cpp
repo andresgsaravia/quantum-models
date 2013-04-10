@@ -10,7 +10,7 @@
 using namespace std;
 using namespace Eigen;
 
-typedef SelfAdjointEigenSolver<MatrixXf> MyEigenSolver;
+typedef SelfAdjointEigenSolver<MatrixXd> MyEigenSolver;
 
 void save_eigenvalues(MyEigenSolver);
 void save_eigenvectors(MyEigenSolver);
@@ -39,7 +39,7 @@ int main (int argc, char *argv[]) {
 
   cout << "There are " << size << " lines so I will assume it's a " << size << "x" << size << " matrix." << endl;
   
-  MatrixXf m(size,size); 
+  MatrixXd m(size,size); 
 
   for (row = 0; row < size; row++) {
     getline(inFile, line);
