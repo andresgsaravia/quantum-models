@@ -32,6 +32,8 @@
 using namespace std;
 using namespace Eigen;
 
+IOFormat LongPrinting(20);
+
 void save_hamiltonian(MatrixXd);
 void save_parameters(double*, double, double, double, double, double, double, double, int, int);
 
@@ -246,7 +248,7 @@ void save_hamiltonian(MatrixXd hamiltonian) {
     ofstream hamfile;
     hamfile.open("hamiltonian.txt", ios::out);
     if (hamfile.is_open()) {
-      hamfile << hamiltonian;
+      hamfile << hamiltonian.format(LongPrinting);
       hamfile << endl;
       hamfile.close();
     }

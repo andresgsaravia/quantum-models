@@ -9,6 +9,8 @@
 using namespace std;
 using namespace Eigen;
 
+IOFormat LongPrinting(20);
+
 void save_vector(string, VectorXd);
 
 int state_label (int e1, int e2, int ir, int ram, int n_ir)
@@ -159,7 +161,7 @@ void save_vector(string filename, VectorXd vec) {
   ofstream outfile;
   outfile.open(filename.c_str(), ios::out);
   if(outfile.is_open()) {
-    outfile << vec;
+    outfile << vec.format(LongPrinting);
     outfile << endl;
     outfile.close();
   }

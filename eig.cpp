@@ -11,6 +11,7 @@ using namespace std;
 using namespace Eigen;
 
 typedef SelfAdjointEigenSolver<MatrixXd> MyEigenSolver;
+IOFormat LongPrinting(20);
 
 void save_eigenvalues(MyEigenSolver);
 void save_eigenvectors(MyEigenSolver);
@@ -72,7 +73,7 @@ void save_eigenvalues(MyEigenSolver eigensolver) {
     ofstream eigvfile;
     eigvfile.open("eigenvalues.txt", ios::out);
     if (eigvfile.is_open()) {
-      eigvfile << eigensolver.eigenvalues();
+      eigvfile << eigensolver.eigenvalues().format(LongPrinting);
       eigvfile << endl;
       eigvfile.close();
     }
@@ -87,7 +88,7 @@ void save_eigenvectors(MyEigenSolver eigensolver) {
     ofstream eigvfile;
     eigvfile.open("eigenvectors.txt", ios::out);
     if (eigvfile.is_open()) {
-      eigvfile << eigensolver.eigenvectors();
+      eigvfile << eigensolver.eigenvectors().format(LongPrinting);
       eigvfile << endl;
       eigvfile.close();
     }
