@@ -1,11 +1,13 @@
 
-CPPFLAGS=-I ./
+CC=g++
+CPPFLAGS = -I ./lib/
 
-all: eig 3-sites-linear/hamiltonian 3-sites-linear/mean-phonons 3-sites-linear/splice-eigenvecs
+all: 
+	$(CC) $(CPPFLAGS) src/eig.cpp -o bin/eig
+	mkdir bin/3-sites-linear
+	$(CC) $(CPPFLAGS) src/3-sites-linear/hamiltonian.cpp -o bin/3-sites-linear/hamiltonian
+	$(CC) $(CPPFLAGS) src/3-sites-linear/mean-phonons.cpp -o bin/3-sites-linear/mean-phonons
+	$(CC) $(CPPFLAGS) src/3-sites-linear/splice-eigenvecs.cpp -o bin/3-sites-linear/splice-eigenvecs
 
 clean:
-	rm -f eig
-	rm -f 3-sites-linear/hamiltonian
-	rm -f 3-sites-linear/mean-phonons
-	rm -f 3-sites-linear/splice-eigenvecs
-	rm -rf 3-sites-linear/calculations
+	rm -rf bin/*
