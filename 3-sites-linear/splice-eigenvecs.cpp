@@ -109,7 +109,7 @@ int main (int argc, char *argv[]) {
   stringstream sstm;
   string filename;
 
-  // Calculate the mean phonons
+  // Save each vector
   for (col = 0; col < 20; col++) {
     for (row = 0; row < size; row++) {
       one_vec(row) = eigenvectors(row, col);
