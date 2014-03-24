@@ -1,6 +1,6 @@
 /*
-  This routine builds a hamiltonian and writes it to a file names "hamiltonian.txt" for a model
-  of a 3-atoms linear molecule with 2 vibrational modes (phonons) and two electrons (or holes) 
+  This routine builds a hamiltonian and writes it to a file named "hamiltonian.mtx" for a model
+  of a 3-atomic linear molecule with 2 vibrational modes (phonons) and two electrons (or holes) 
   hopping between the atoms. The inputs are read from the file "parameters.inp" if this file is 
   not found it will create a template for it. 
 
@@ -10,7 +10,8 @@
 
   where each contribution is:
   
-  H_{el} = \sum_n \epsilon_n \rho_n + t\sum_{\langle nn'\rangle\sigma}(c_{n\sigma}^\dagger c_{n'\sigma} + H.c.) + U\sum_n \rho_{n\downarrow}\rho_{n\uparrow}
+  H_{el} = \sum_n \epsilon_n \rho_n + t\sum_{\langle nn'\rangle\sigma}(c_{n\sigma}^\dagger c_{n'\sigma} + H.c.) 
+           + U\sum_n \rho_{n\downarrow}\rho_{n\uparrow}
 
   H_{ph} = \hbar \omega_{ir}a_{ir}^\dagger a_{ir} + \hbar \omega_R a_R^\dagger a_R
 
@@ -19,25 +20,22 @@
   Reference: Physical Review B, 49, 3671–3674. doi:10.1103/PhysRevB.49.3671
 
   See the LICENSE file for information on how to reuse this code.
- */
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <unsupported/Eigen/SparseExtra>
+#include <vector>
 
+Eigen::IOFormat LongPrinting(20);
 
-using namespace std;
-using namespace Eigen;
-
-IOFormat LongPrinting(20);
-
-void save_hamiltonian(MatrixXd);
 void save_parameters(double*, double, double, double, double, double, double, double, int, int);
 
-// Assing a unique label according to the position of electron 1 (e1), electron 2 (e2),
+// Assigning a unique label according to the position of electron 1 (e1), electron 2 (e2),
 // the number if infrared and Raman phonons (ir and ram) and the total number of infrared
 // phonons (n_ir)
 int state_label (int e1, int e2, int ir, int ram, int n_ir)
@@ -45,6 +43,8 @@ int state_label (int e1, int e2, int ir, int ram, int n_ir)
   return e1 + (3 * (e2 -1)) + (9 * ir) + (9 * ram * (n_ir + 1)) - 1;
 }
 
+typedef Eigen::SparseMatrix<double> SpMat;
+typedef Eigen::Triplet<double> T;
 
 int main (int argc, char *argv[]) {
   int ir_phonons, raman_phonons, size;
@@ -55,8 +55,8 @@ int main (int argc, char *argv[]) {
   int e1, e2, ir, ram, row, col, n;  // just counters
   double energy;  // useful variable to fill in the hamiltonian elements
 
-  ifstream inputfile;
-  string line;
+  std::ifstream inputfile;
+  std::string line;
   inputfile.open("parameters.inp");
   if (inputfile.is_open()) {
     // TODO: Assert that the values make sense
@@ -111,19 +111,18 @@ int main (int argc, char *argv[]) {
     inputfile.close();
   }
   else {
-    cout << "Input file \"parameters.inp\" not found. I will create a template for you. " << endl;
+    std::cout << "Input file \"parameters.inp\" not found. I will create a template for you. " << std::endl;
     double temp[3] = {0, 0, 0};
     save_parameters(temp, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0);
     return 0;
   }
 
   size = 9 * (1 + raman_phonons) * (1 + ir_phonons);
-  cout << "The size of the hamiltonian is: " << size << "x" << size << endl;
+  std::cout << "The size of the hamiltonian is: " << size << "x" << size << std::endl;
 
-  MatrixXd h = MatrixXd::Zero(size, size);
-
-
-  // building the hamiltonian
+  std::vector<T> coeffsList;    // non-zero triplets
+  
+  // Filling the coefficients' vector
   for (e1 = 1; e1 <= 3; e1++) {
     for (e2 = 1; e2 <= 3; e2++) {
       for (ir = 0; ir <= ir_phonons; ir++) {
@@ -133,48 +132,48 @@ int main (int argc, char *argv[]) {
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = band_energy[e1 - 1] + band_energy[e2 - 1];
-	  h(row,col) += energy;
+	  coeffsList.push_back(T(row ,col, energy));
 
 	  // on-site Coulomb repulsion
 	  if (e1 == e2) {
 	    row = state_label(e1, e1, ir, ram, ir_phonons);
 	    col = state_label(e1, e1, ir, ram, ir_phonons);
-	    h(row, col) += on_site_repulsion;
+	    coeffsList.push_back(T(row, col, on_site_repulsion));
 	  }
 
 	  // nearest-neighbor hopping
 	  if (e1 != 3) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1 + 1, e2, ir, ram, ir_phonons);
-	    h(row, col) += nn_hopping;
+	    coeffsList.push_back(T(row, col, nn_hopping));
 	  }
 	  if (e1 != 1) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1 - 1, e2, ir, ram, ir_phonons);
-	    h(row, col) += nn_hopping;
+	    coeffsList.push_back(T(row, col, nn_hopping));
 	  }
 	  if (e2 != 3) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2 + 1, ir, ram, ir_phonons);
-	    h(row, col) += nn_hopping;
+	    coeffsList.push_back(T(row, col, nn_hopping));
 	  }
 	  if (e2 != 1) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2 - 1, ir, ram, ir_phonons);
-	    h(row, col) += nn_hopping;
+	    coeffsList.push_back(T(row, col, nn_hopping));
 	  }
 	  
 	  // infrared phonons energy
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = ir * ir_energy;
-	  h(row, col) += energy;
+	  coeffsList.push_back(T(row, col, energy));
 
 	  // raman phonons energy
 	  row = state_label(e1, e2, ir, ram, ir_phonons);
 	  col = state_label(e1, e2, ir, ram, ir_phonons);
 	  energy = ram * raman_energy;
-	  h(row, col) += energy;
+	  coeffsList.push_back(T(row, col, energy));
 
 	  // electron - infrared phonons interaction
 	  n = e1 + e2 - 4;
@@ -182,13 +181,13 @@ int main (int argc, char *argv[]) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir + 1, ram, ir_phonons);
 	    energy = n * e_ir_coupling * sqrt(ir + 1);
-	    h(row, col) += energy;
+	    coeffsList.push_back(T(row, col, energy));
 	  }
 	  if (ir != 0) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir - 1, ram, ir_phonons);
 	    energy = n * e_ir_coupling * sqrt(ir);
-	    h(row, col) += energy;
+	    coeffsList.push_back(T(row, col, energy));
 	  }
 	  
 	  // electron - Raman phonons interaction
@@ -197,22 +196,25 @@ int main (int argc, char *argv[]) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir, ram + 1, ir_phonons);
 	    energy = n * e_ram_coupling * sqrt(ram + 1);
-	    h(row, col) += energy;
+	    coeffsList.push_back(T(row, col, energy));
 	  }
 	  if (ram != 0) {
 	    row = state_label(e1, e2, ir, ram, ir_phonons);
 	    col = state_label(e1, e2, ir, ram - 1, ir_phonons);
 	    energy = n * e_ram_coupling * sqrt(ram);
-	    h(row, col) += energy;
+	    coeffsList.push_back(T(row, col, energy));
 	  }
 	}
       }
     }
   }
 
-  cout << "Saving the hamiltonian matrix at \"hamiltonian.txt\"... ";
-  save_hamiltonian(h);
-  cout << "Done." << endl;
+  Eigen::SparseMatrix<double> h(size,size);
+  h.setFromTriplets(coeffsList.begin(), coeffsList.end());
+
+  std::cout << "Saving the hamiltonian matrix at \"hamiltonian.mtx\"... ";
+  Eigen::saveMarket(h, "hamiltonian.mtx");
+  std::cout << "Done." << std::endl;
 
   return 0;
 }
@@ -221,39 +223,25 @@ int main (int argc, char *argv[]) {
 void save_parameters(double *band_energy, double nn_hopping, double on_site_repulsion,
 		     double ir_energy, double e_ir_coupling, double raman_energy, 
 		     double e_ram_coupling, double raman_shift, int ir_phonons, int raman_phonons) {
-  ofstream paramfile;
-  paramfile.open("parameters.inp", ios::out);
+  std::ofstream paramfile;
+  paramfile.open("parameters.inp", std::ios::out);
   if (paramfile.is_open()) {
-    paramfile << band_energy[0] << ", Band energy for site 1" << endl;
-    paramfile << band_energy[1] << ", Band energy for site 2" << endl;
-    paramfile << band_energy[2] << ", Band energy for site 3" << endl;
-    paramfile << nn_hopping << ", Nearest neighbor hopping" << endl;
-    paramfile << on_site_repulsion << ", On site Coulomb repulsion" << endl;
-    paramfile << ir_energy << ", Infrared phonon's energy" << endl;
-    paramfile << e_ir_coupling << ", Electron - infrared phonons coupling" << endl;
-    paramfile << raman_energy << ", Raman phonon's energy" << endl;
-    paramfile << e_ir_coupling << ", Electron - raman phonons coupling" << endl;
-    paramfile << raman_shift << ", Raman shift" << endl;
-    paramfile << ir_phonons << ", Number of infrared phonons" << endl;
-    paramfile << raman_phonons << ", Number of raman phonons" << endl;
+    paramfile << band_energy[0] << ", Band energy for site 1" << std::endl;
+    paramfile << band_energy[1] << ", Band energy for site 2" << std::endl;
+    paramfile << band_energy[2] << ", Band energy for site 3" << std::endl;
+    paramfile << nn_hopping << ", Nearest neighbor hopping" << std::endl;
+    paramfile << on_site_repulsion << ", On site Coulomb repulsion" << std::endl;
+    paramfile << ir_energy << ", Infrared phonon's energy" << std::endl;
+    paramfile << e_ir_coupling << ", Electron - infrared phonons coupling" << std::endl;
+    paramfile << raman_energy << ", Raman phonon's energy" << std::endl;
+    paramfile << e_ir_coupling << ", Electron - raman phonons coupling" << std::endl;
+    paramfile << raman_shift << ", Raman shift" << std::endl;
+    paramfile << ir_phonons << ", Number of infrared phonons" << std::endl;
+    paramfile << raman_phonons << ", Number of raman phonons" << std::endl;
     paramfile.close();
   }
   else {
-    cout << "Unable to create file. " << endl;
+    std::cout << "Unable to create file. " << std::endl;
   }
   return;
-}
-
-void save_hamiltonian(MatrixXd hamiltonian) {
-    ofstream hamfile;
-    hamfile.open("hamiltonian.txt", ios::out);
-    if (hamfile.is_open()) {
-      hamfile << hamiltonian.format(LongPrinting);
-      hamfile << endl;
-      hamfile.close();
-    }
-    else {
-      cout << "Unable to create file" << endl;
-    }
-    return;
 }
